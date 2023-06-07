@@ -1,16 +1,30 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"os"
 	"strings"
 
+	"github.com/dundunlabs/sua"
 	"github.com/dundunlabs/sua/x/migration"
+	_ "github.com/joho/godotenv/autoload"
+	_ "github.com/lib/pq"
 	"github.com/urfave/cli/v3"
 )
 
+const dsnKey = "DATABASE_URL"
+
 func main() {
-	migrator := migration.NewMigrator()
+	sqldb, err := sql.Open("postgres", os.Getenv(dsnKey))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	db := sua.NewDB(sqldb)
+	defer db.Close()
+
+	migrator := migration.NewMigrator(db)
 
 	suacli := &cli.App{
 		Name:  "sua",
@@ -35,6 +49,19 @@ func main() {
 							name := strings.Join(ctx.Args().Slice(), "_")
 							sql := ctx.Bool("sql")
 							return migrator.GenerateMigration(name, sql)
+						},
+					},
+				},
+			},
+			{
+				Name:  "db",
+				Usage: "manage db",
+				Commands: []*cli.Command{
+					{
+						Name:  "migrate",
+						Usage: "migrate db",
+						Action: func(ctx *cli.Context) error {
+							return migrator.Migrate(ctx.Context)
 						},
 					},
 				},

@@ -1,14 +1,19 @@
 package migration
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
+
+	"github.com/dundunlabs/sua"
+	"github.com/dundunlabs/sua/stmt"
 )
 
 const (
 	migrationsDir = "sua/migrations"
 	timeFormat    = "20060102150405"
+	migrTable     = "_sua_migrations"
 	dirPerm       = 0o755
 	filePerm      = 0o644
 )
@@ -18,11 +23,30 @@ var (
 	sqlExts = []string{"up.sql", "down.sql"}
 )
 
-func NewMigrator() *Migrator {
-	return &Migrator{}
+func NewMigrator(db *sua.DB) *Migrator {
+	return &Migrator{
+		DB: db,
+	}
 }
 
 type Migrator struct {
+	*sua.DB
+}
+
+func (m *Migrator) Migrate(ctx context.Context) error {
+	if err := m.Init(ctx); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *Migrator) Init(ctx context.Context) error {
+	_, err := m.CreateTable(migrTable, func(stmt *stmt.CreateTableStmt) {
+		stmt.Col("name").Varchar(255).Unique()
+		stmt.Col("migrated_at").Timestamp(3).Default("current_timestamp")
+		stmt.Col("rollbacked_at").Timestamp(3).Nullable()
+	}).IfNotExists().Exec(ctx)
+	return err
 }
 
 func (m *Migrator) GenerateMigration(name string, sql bool) error {
