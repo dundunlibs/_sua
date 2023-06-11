@@ -8,7 +8,7 @@ import (
 )
 
 func NewDB() (*sua.DB, error) {
-	sqldb, err := sql.Open("postgres", "")
+	sqldb, err := sql.Open("postgres", "postgresql://dundun:@localhost:5432/sua-example?sslmode=disable")
 	if err != nil {
 		return nil, err
 	}
