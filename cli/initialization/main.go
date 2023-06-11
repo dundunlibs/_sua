@@ -5,22 +5,32 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/dundunlabs/sua/cli/constants"
 	"golang.org/x/mod/modfile"
 )
 
 const (
-	suaDir   = "sua"
-	migrDir  = "migrations"
-	cmdDir   = "cmd/sua"
-	dirPerm  = 0755
-	filePerm = 0644
+	cmdDir = "cmd/sua"
 )
 
 const migrMain = `package migrations
 
-import "github.com/dundunlabs/sua/migr"
+import (
+	"embed"
+
+	"github.com/dundunlabs/sua/migr"
+)
 
 var Migrations = migr.NewMigrations()
+
+//go:embed *.sql
+var fs embed.FS
+
+func init() {
+	if err := Migrations.Load(fs); err != nil {
+		panic(err)
+	}
+}
 `
 
 const suaDB = `package sua
@@ -77,11 +87,11 @@ func Generate() error {
 type genFunc func() error
 
 func genDB() error {
-	return genFile(suaDir, "db.go", suaDB)
+	return genFile(constants.SuaDir, "db.go", suaDB)
 }
 
 func genMigrations() error {
-	return genFile(fmt.Sprintf("%s/%s", suaDir, migrDir), "main.go", migrMain)
+	return genFile(fmt.Sprintf("%s/%s", constants.SuaDir, constants.MigrDir), "main.go", migrMain)
 }
 
 func genCmd() error {
@@ -89,7 +99,7 @@ func genCmd() error {
 	if err != nil {
 		return err
 	}
-	str := fmt.Sprintf(cmdMain, path, suaDir, migrDir)
+	str := fmt.Sprintf(cmdMain, path, constants.SuaDir, constants.MigrDir)
 	return genFile(cmdDir, "main.go", str)
 }
 
@@ -97,12 +107,12 @@ func genFile(dir string, file string, data string) error {
 	if err := mkdir(dir); err != nil {
 		return err
 	}
-	return os.WriteFile(dir+"/main.go", []byte(data), filePerm)
+	return os.WriteFile(dir+"/main.go", []byte(data), constants.FilePerm)
 
 }
 
 func mkdir(dir string) error {
-	err := os.MkdirAll(dir, dirPerm)
+	err := os.MkdirAll(dir, constants.DirPerm)
 	if err != nil && !os.IsExist(err) {
 		return err
 	}

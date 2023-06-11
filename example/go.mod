@@ -12,6 +12,7 @@ require (
 	github.com/dundunlabs/sua v0.0.0-00010101000000-000000000000
 	github.com/dundunlabs/sua/cli v0.0.0-00010101000000-000000000000
 	github.com/dundunlabs/sua/migr v0.0.0-00010101000000-000000000000
+	github.com/lib/pq v1.10.9
 )
 
 require (
