@@ -1,13 +1,9 @@
-package stmt
+package sua
 
 import (
 	"fmt"
 	"strings"
 )
-
-func NewColumn() *Column {
-	return &Column{}
-}
 
 type Column struct {
 	name         string

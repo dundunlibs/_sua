@@ -1,4 +1,4 @@
-package stmt
+package sua
 
 import (
 	"testing"
@@ -7,8 +7,8 @@ import (
 )
 
 func TestColumn(t *testing.T) {
-	name := NewColumn().Name("name").Text().NotNull().Default("''")
-	email := NewColumn().Name("bio").Varchar(255).Unique()
+	name := (&Column{}).Name("name").Text().NotNull().Default("''")
+	email := (&Column{}).Name("bio").Varchar(255).Unique()
 	assert.Equal(t, "name TEXT NOT NULL DEFAULT ''", name.string())
 	assert.Equal(t, "bio VARCHAR(255) UNIQUE", email.string())
 }
